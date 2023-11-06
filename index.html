@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.7.2/tinymce.min.js"></script>
+	<style>
+		body,
+		html {
+			height: 100%;
+		}
+
+		div {
+			width: 49%;
+			height: 90%;
+			float: left;
+			margin-right: 10px
+		}
+
+		textarea {
+			width: 100%;
+			height: 100%;
+		}
+	</style>
+</head>
+<body>
+	<div><textarea id="previewCode" class="previewCode" name="previewCode"></textarea></div>
+	<div><textarea id="sourceCode" class="sourceCode"></textarea></div>
+	<script>
+		tinymce.init({
+	      selector: "#previewCode",
+          element_format: 'html',
+		  forced_root_block: 'p',
+		  force_br_newlines: true,
+		  fix_list_elements: true,
+          paste_auto_cleanup_on_paste: true,
+            paste_postprocess: function (pl, o) {
+				// Replace text within pasted content example
+                // o.node.innerHTML = o.node.innerHTML.replace(/\<\/a\>/ig, "</a>");
+
+				// Remove specific attributes - Thanks Google
+				let allElements = o.node.querySelectorAll('*');
+				allElements.forEach(function (element) {
+					element.removeAttribute('dir');
+					element.removeAttribute('role');
+					element.removeAttribute('aria-level');
+				});
+
+				// Remove empty tags
+				allElements.forEach(function (el) {
+					if (el.nodeType === 1 && !el.firstChild) {
+						// If the element is empty (no children), remove it
+						el.parentNode.removeChild(el);
+					} else if (el.nodeType === 1 && el.innerText.trim() === '' && el.children.length === 0) {
+						// If the element has no text content and no child elements, remove it
+						el.parentNode.removeChild(el);
+					}
+				});
+
+				// Remove p tags within li tags
+				var nodeList = o.node.querySelectorAll('li p');
+				nodeList.forEach(function (node) {
+					while (node.firstChild) {
+						node.parentNode.insertBefore(node.firstChild, node);
+					}
+					node.parentNode.removeChild(node);
+				});
+            },
+	      menubar: false,
+          height: '100%',
+          width: '100%',
+	      toolbar: ["code | undo redo | bold italic underline | styleselect | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | table"],
+	      plugins: "code image lists link table",
+				table_default_styles: {},
+				table_default_attributes: {},
+				table_class_list: [
+					{ title: 'None', value: '' },
+					{ title: 'Table', value: 'table' }
+				],
+				table_row_class_list: [
+					{ title: 'None', value: '' },
+					{ title: 'Intermission', value: 'intermission' },
+				],
+				table_advtab: false,
+	      setup: function(ed) {
+	        ed.on('change', function(e) {
+	          updateSource(ed.getContent());
+	        });
+
+	        ed.on('keyup', function(e) {
+	          updateSource(ed.getContent());
+	        });
+	      }
+		});
+
+		function updateSource(content) {
+			var code = document.querySelector('#sourceCode');
+			code.value = content;
+		}
+
+		function updatePreview(content) {
+			var sourceCode = document.querySelector('#sourceCode').value;
+			tinymce.get('previewCode').setContent(sourceCode);
+		}
+
+		document.querySelector('#sourceCode').addEventListener('keyup', updatePreview);
+	</script>
+
+</body>
+</html>
